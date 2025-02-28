@@ -1,58 +1,66 @@
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
-const xlsx = require("xlsx");
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
+const xlsx = require('xlsx');
 
 const app = express();
 app.use(cors());
 
-app.get("/report-card", (req, res) => {
+app.get('/report-card', (req, res) => {
   const { class: studentClass, section, roll, examType } = req.query;
 
-  // ✅ Validate Input
+  // Validate required parameters
   if (!studentClass || !roll || !examType) {
-    return res.status(400).json({ error: "Missing required parameters" });
+    return res.status(400).json({ error: 'Missing required parameters' });
   }
 
-  // ✅ Define folder structure
-  let folderPath = path.join(__dirname, "public", "reports", examType, `class${studentClass}`);
+  // Construct the folder path
+  const folderPath = path.join(
+    __dirname,
+    'public',
+    'reports',
+    examType.toLowerCase(), // Ensure examType matches folder naming
+    `class${studentClass}`
+  );
 
-  // ✅ Construct the file name
+  // Construct the file name
   let fileName;
-  if (studentClass >= 6 && studentClass <= 10) {
+  if (parseInt(studentClass) >= 6 && parseInt(studentClass) <= 10) {
     if (!section) {
-      return res.status(400).json({ error: "Section is required for Class 6-10" });
+      return res.status(400).json({ error: 'Section is required for classes 6-10' });
     }
-    fileName = `class${studentClass}${section}results.xlsx`;
+    fileName = `class${studentClass}${section.toUpperCase()}results.xlsx`;
   } else {
-    fileName = `class${studentClass}results.xlsx`; // No section for Class 11-12
+    fileName = `class${studentClass}results.xlsx`; // No section for classes 11-12
   }
 
   const filePath = path.join(folderPath, fileName);
-  console.log("Trying to read file:", filePath); // ✅ Debugging log
+  // console.log(filePath);
+
+  // Check if the file exists
+  if (!fs.existsSync(filePath)) {
+    console.error(`File not found: ${filePath}`);
+    return res.status(404).json({ error: 'Report card file not found' });
+  }
 
   try {
-    // ✅ Check if file exists
+    // Read the Excel file
     const workbook = xlsx.readFile(filePath);
     const sheetName = workbook.SheetNames[0];
     const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-    console.log("Extracted Data:", data); // ✅ Debugging log
-
-    // ✅ Find the student's data
-    const student = data.find((student) => {
-      console.log("Checking student:", student); // ✅ Debugging log
-      return student.RollNumber == String(roll); // Ensure comparison is correct
-    });
+    // Find the student's data by roll number
+    const student = data.find((s) => String(s.RollNumber) === String(roll));
 
     if (!student) {
-      return res.status(404).json({ error: "Report card not found" });
+      return res.status(404).json({ error: 'Report card not found' });
     }
 
     res.json(student);
   } catch (error) {
-    console.error("Error reading report card:", error);
-    res.status(500).json({ error: "Error reading report card" });
+    console.error('Error reading report card:', error);
+    res.status(500).json({ error: 'Error reading report card' });
   }
 });
 
