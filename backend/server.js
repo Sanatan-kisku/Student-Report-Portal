@@ -1,53 +1,60 @@
 const express = require("express");
 const cors = require("cors");
-const multer = require("multer");
-const XLSX = require("xlsx");
 const fs = require("fs");
+const path = require("path");
+const xlsx = require("xlsx");  // Excel file reader
 
 const app = express();
 const PORT = 5000;
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Multer setup for file upload
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, "results.xlsx"),
-});
-const upload = multer({ storage });
-
-if (!fs.existsSync("uploads")) {
-  fs.mkdirSync("uploads");
-}
-
-// Upload Excel file
-app.post("/upload", upload.single("file"), (req, res) => {
-  res.send({ message: "File uploaded successfully" });
-});
-
-// Get Report Card
 app.get("/report-card", (req, res) => {
-  const { class: studentClass, roll } = req.query;
+  const studentClass = req.query.class;
+  const section = req.query.section;
+  const roll = req.query.roll;
 
-  try {
-    const filePath = "uploads/results.xlsx";
-    if (!fs.existsSync(filePath)) return res.status(404).json({ error: "File not found" });
-
-    const workbook = XLSX.readFile(filePath);
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(sheet);
-
-    const student = data.find(
-      (row) => row.Class.toString() === studentClass && row.Roll.toString() === roll
-    );
-
-    if (!student) return res.status(404).json({ error: "Student not found" });
-
-    res.json(student);
-  } catch (error) {
-    res.status(500).json({ error: "Error reading file" });
+  if (!studentClass || !roll) {
+    return res.status(400).json({ error: "Class and Roll Number are required" });
   }
+
+  let filePath = `public/reports/class${studentClass}/`;
+
+  if (studentClass >= 6 && studentClass <= 10) {
+    if (!section) {
+      return res.status(400).json({ error: "Section is required for classes 6 to 10" });
+    }
+    filePath += `class${studentClass}${section}results.xlsx`;
+  } else {
+    filePath += `class${studentClass}results.xlsx`;
+  }
+
+  console.log("Looking for file:", filePath);
+
+  if (!fs.existsSync(filePath)) {
+    console.log("File not found:", filePath);
+    return res.status(404).json({ error: "Report card not found" });
+  }
+
+  // Read Excel file
+  const workbook = xlsx.readFile(filePath);
+  const sheetName = workbook.SheetNames[0];
+  const sheet = workbook.Sheets[sheetName];
+  const data = xlsx.utils.sheet_to_json(sheet);
+
+  // Find student by roll number
+  const studentData = data.find(student => student.Roll == roll);
+
+  if (!studentData) {
+    return res.status(404).json({ error: "Student not found in the file" });
+  }
+
+  res.json(studentData);
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
