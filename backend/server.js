@@ -1,53 +1,60 @@
 const express = require("express");
 const cors = require("cors");
-const multer = require("multer");
-const XLSX = require("xlsx");
-const fs = require("fs");
+const path = require("path");
+const xlsx = require("xlsx");
 
 const app = express();
-const PORT = 5000;
-
 app.use(cors());
-app.use(express.json());
 
-// Multer setup for file upload
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, "results.xlsx"),
-});
-const upload = multer({ storage });
-
-if (!fs.existsSync("uploads")) {
-  fs.mkdirSync("uploads");
-}
-
-// Upload Excel file
-app.post("/upload", upload.single("file"), (req, res) => {
-  res.send({ message: "File uploaded successfully" });
-});
-
-// Get Report Card
 app.get("/report-card", (req, res) => {
-  const { class: studentClass, roll } = req.query;
+  const { class: studentClass, section, roll, examType } = req.query;
+
+  // ✅ Validate Input
+  if (!studentClass || !roll || !examType) {
+    return res.status(400).json({ error: "Missing required parameters" });
+  }
+
+  // ✅ Define folder structure
+  let folderPath = path.join(__dirname, "public", "reports", examType, `class${studentClass}`);
+
+  // ✅ Construct the file name
+  let fileName;
+  if (studentClass >= 6 && studentClass <= 10) {
+    if (!section) {
+      return res.status(400).json({ error: "Section is required for Class 6-10" });
+    }
+    fileName = `class${studentClass}${section}results.xlsx`;
+  } else {
+    fileName = `class${studentClass}results.xlsx`; // No section for Class 11-12
+  }
+
+  const filePath = path.join(folderPath, fileName);
+  console.log("Trying to read file:", filePath); // ✅ Debugging log
 
   try {
-    const filePath = "uploads/results.xlsx";
-    if (!fs.existsSync(filePath)) return res.status(404).json({ error: "File not found" });
+    // ✅ Check if file exists
+    const workbook = xlsx.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-    const workbook = XLSX.readFile(filePath);
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(sheet);
+    console.log("Extracted Data:", data); // ✅ Debugging log
 
-    const student = data.find(
-      (row) => row.Class.toString() === studentClass && row.Roll.toString() === roll
-    );
+    // ✅ Find the student's data
+    const student = data.find((student) => {
+      console.log("Checking student:", student); // ✅ Debugging log
+      return student.RollNumber == String(roll); // Ensure comparison is correct
+    });
 
-    if (!student) return res.status(404).json({ error: "Student not found" });
+    if (!student) {
+      return res.status(404).json({ error: "Report card not found" });
+    }
 
     res.json(student);
   } catch (error) {
-    res.status(500).json({ error: "Error reading file" });
+    console.error("Error reading report card:", error);
+    res.status(500).json({ error: "Error reading report card" });
   }
 });
 
+const PORT = 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

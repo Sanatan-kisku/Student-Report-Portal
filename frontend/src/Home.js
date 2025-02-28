@@ -7,6 +7,7 @@ function Home() {
   const [studentClass, setStudentClass] = useState("");
   const [section, setSection] = useState("");
   const [rollNumber, setRollNumber] = useState("");
+  const [examType, setExamType] = useState(""); // New State for Exam Type
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -16,8 +17,9 @@ function Home() {
 
     try {
       const response = await axios.get(
-        `http://localhost:5000/report-card?class=${studentClass}&section=${section}&roll=${rollNumber}`
+        `http://localhost:5000/report-card?class=${studentClass}&section=${section}&roll=${rollNumber}&examType=${examType}`
       );
+
       navigate("/report-card", { state: { reportCard: response.data } });
     } catch (err) {
       setError("Report card not found.");
@@ -36,22 +38,16 @@ function Home() {
       <p className="lead text-secondary">Enter your details to access your report card.</p>
 
       {/* Student Form */}
-      <div className="card shadow-sm mx-auto mt-4 p-4" style={{ maxWidth: "600px" }}>
+      <div className="card shadow-sm mx-auto mt-4 p-4" style={{ maxWidth: "450px" }}>
         <form onSubmit={handleSubmit}>
-          {/* Side-by-Side Inputs using Bootstrap Grid */}
+          {/* Side-by-Side Inputs */}
           <div className="row mb-3">
-            {/* Class Field */}
             <div className="col-md-4">
               <label className="form-label">Select Class:</label>
               <select
                 className="form-select"
                 value={studentClass}
-                onChange={(e) => {
-                  setStudentClass(e.target.value);
-                  if (e.target.value === "11" || e.target.value === "12") {
-                    setSection(""); // Reset section if class is 11 or 12
-                  }
-                }}
+                onChange={(e) => setStudentClass(e.target.value)}
                 required
               >
                 <option value="">Choose...</option>
@@ -65,8 +61,8 @@ function Home() {
               </select>
             </div>
 
-            {/* Section Field (Only for Class 6-10) */}
-            {studentClass && parseInt(studentClass) >= 6 && parseInt(studentClass) <= 10 && (
+            {/* Section Field (Only for Classes 6 to 10) */}
+            {studentClass && studentClass >= 6 && studentClass <= 10 && (
               <div className="col-md-4">
                 <label className="form-label">Select Section:</label>
                 <select
@@ -82,8 +78,7 @@ function Home() {
               </div>
             )}
 
-            {/* Roll Number Field */}
-            <div className={studentClass && parseInt(studentClass) >= 6 && parseInt(studentClass) <= 10 ? "col-md-4" : "col-md-6 mx-auto"}>
+            <div className="col-md-4">
               <label className="form-label">Enter Roll Number:</label>
               <input
                 type="text"
@@ -94,6 +89,21 @@ function Home() {
                 required
               />
             </div>
+          </div>
+
+          {/* Exam Type Selection */}
+          <div className="mb-3">
+            <label className="form-label">Select Exam Type:</label>
+            <select
+              className="form-select"
+              value={examType}
+              onChange={(e) => setExamType(e.target.value)}
+              required
+            >
+              <option value="">Choose...</option>
+              <option value="half-yearly">Half-Yearly</option>
+              <option value="annual">Annual</option>
+            </select>
           </div>
 
           <button type="submit" className="btn btn-primary w-100">Get Report Card</button>
