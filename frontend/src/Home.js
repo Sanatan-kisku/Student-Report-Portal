@@ -16,7 +16,8 @@ function Home() {
 
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}/report-card?class=${studentClass}&section=${section}&roll=${rollNumber}`
+        // `${process.env.REACT_APP_BACKEND_URL}/report-card?class=${studentClass}&section=${section}&roll=${rollNumber}`
+        `https://student-report-portal.onrender.com/report-card?class=${studentClass}&section=${section}&roll=${rollNumber}`
       );
       navigate("/report-card", { state: { reportCard: response.data } });
     } catch (err) {
