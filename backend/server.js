@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
-const xlsx = require("xlsx");  // Excel file reader
+const xlsx = require("xlsx");
 
 const app = express();
 const PORT = 5000;
@@ -31,22 +31,16 @@ app.get("/report-card", (req, res) => {
     filePath += `class${studentClass}results.xlsx`;
   }
 
-  console.log("Looking for file:", filePath);
-
   if (!fs.existsSync(filePath)) {
-    console.log("File not found:", filePath);
     return res.status(404).json({ error: "Report card not found" });
   }
 
-  // Read Excel file
   const workbook = xlsx.readFile(filePath);
   const sheetName = workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];
   const data = xlsx.utils.sheet_to_json(sheet);
 
-  // Find student by roll number
   const studentData = data.find(student => student.Roll == roll);
-
   if (!studentData) {
     return res.status(404).json({ error: "Student not found in the file" });
   }
@@ -58,7 +52,6 @@ app.get("/", (req, res) => {
   res.send("Backend is running...");
 });
 
-// Start the server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
