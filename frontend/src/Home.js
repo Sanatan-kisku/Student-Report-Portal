@@ -14,7 +14,7 @@ function Home() {
 
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}/report-card?class=${studentClass}&section=${section}&roll=${rollNumber}`
+        `http://localhost:5000/report-card?class=${studentClass}&section=${section}&roll=${rollNumber}`
       );
 
       navigate("/report-card", { state: { reportCard: response.data } });
