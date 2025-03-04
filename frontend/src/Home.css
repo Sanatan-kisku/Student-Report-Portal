@@ -1,0 +1,97 @@
+/* Ensure full-page centering */
+.home-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;  
+  background-image: url('./OAVSuradaSchool.jpg'); /* Ensure path is correct */
+  background-size: cover;
+  background-position: center;
+  padding: 20px;
+  text-align: center;
+}
+
+/* Home card centering */
+.home-card {
+  background: rgba(255, 255, 255, 0.8);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+}
+
+/* Header (School Name & Logo) */
+.school-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* margin-bottom: 10px; */
+}
+
+/* School logo */
+.school-logo {
+  width: 140px; /* Increased logo size */
+  height: auto;
+}
+
+/* School name styling */
+.school-name {
+  font-size: 38px; /* Increased font size */
+  font-weight: bold;
+  background-image: linear-gradient(90deg, #fff241, #ff4b2b, #ff416c);
+            background-size: 200% 100%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            /* animation: gradientMove 3s infinite linear; */
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  /* margin-top: 10px; */
+}
+
+@keyframes gradientMove {
+  0% {
+      background-position: 0% 50%;
+  }
+  100% {
+      background-position: 100% 50%;
+  }
+}
+
+/* Form centering */
+.home-form {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Inputs & Select dropdowns */
+.home-form select,
+.home-form input {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+/* Button styling */
+.home-form button {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #007bff;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+}
+
+.home-form button:hover {
+  background-color: #0056b3;
+}
